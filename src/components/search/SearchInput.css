@@ -1,0 +1,18 @@
+.search {
+    position: absolute;
+    z-index: 1;
+    top: 1rem;
+    left: 1rem;
+}
+
+.searchInput {
+    padding: 4px;
+}
+
+.searchButton {
+    padding: 4px;
+    margin-left: 2px;
+    background: rgb(1 168 212);
+    border: 2px solid rgb(1 168 212);
+    color: white;
+}
