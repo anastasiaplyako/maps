@@ -17,10 +17,10 @@ const Map: FC = () => {
     const [zoom, setZoom] = useState(INITIAL_ZOOM);
     const markersRef = useRef<Marker[] | undefined>([]);
 
-    const handleReset = useCallback(() => {
+    const handleReset = () => {
         mapInstance && mapInstance.off('zoomend', () => {});
         markersRef.current = [];
-    }, [mapInstance, workerInstance]);
+    }
 
     useEffect(() => {
         workerInstance?.postMessage({
