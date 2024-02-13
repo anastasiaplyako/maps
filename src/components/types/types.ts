@@ -12,7 +12,6 @@ export type TMarkersItems = {
     type: number;
     vital: number;
 };
-
 export type TMarkers = {
     meta: {
         api_version: string;
