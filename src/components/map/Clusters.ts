@@ -1,19 +1,20 @@
-import SuperCluster, { PointFeature } from 'supercluster';
-import { Map  } from '@2gis/mapgl/global'
-import {TMarkerCoordinates} from "../types";
-import * as GeoJSON from "geojson";
+import SuperCluster from 'supercluster';
+import { Map } from '@2gis/mapgl/global';
+import { TMarkerCoordinates, TPoints } from '../types/types';
+import * as GeoJSON from 'geojson';
+import { DEFAULT_RADIUS } from './const';
 
 class Clusters {
-    markers;
-    map;
-    superCluster: SuperCluster;
+    private markers;
+    private readonly map;
+    private superCluster: SuperCluster;
 
     constructor(markers: TMarkerCoordinates, map: Map | null | undefined) {
         this.markers = markers;
         this.map = map;
         this.superCluster = new SuperCluster({
             maxZoom: map?.getMaxZoom(),
-            radius: 60,
+            radius: DEFAULT_RADIUS,
         });
     }
 
@@ -23,7 +24,7 @@ class Clusters {
             const bounds = this.map.getBounds();
 
             const bbox = [...bounds.southWest, ...bounds.northEast];
-            const points = this.markers.map((marker) => ({
+            const points: TPoints = this.markers.map((marker) => ({
                 type: 'Feature',
                 geometry: {
                     type: 'Point',
@@ -31,7 +32,7 @@ class Clusters {
                 },
                 properties: { marker },
             }));
-            this.superCluster.load(points as any); // todo - delete
+            this.superCluster.load(points);
             return this.superCluster.getClusters(bbox as GeoJSON.BBox, zoom);
         }
     }

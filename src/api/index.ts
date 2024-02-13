@@ -1,7 +1,6 @@
-import {TMarkers} from "../components/types";
+import { TMarkers } from '../components/types/types';
 
-// @ts-ignore todo!
-export const getRequest = async (url: string): Promise<TMarkers> => {
+export const getRequest = async (url: string): Promise<TMarkers | undefined> => {
     try {
         const data = await fetch(url);
         return await data.json();

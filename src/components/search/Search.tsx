@@ -1,11 +1,11 @@
-import React, {ChangeEvent, FC, useState} from 'react';
+import React, { ChangeEvent, FC, useState } from 'react';
 import './SearchInput.css';
 import { getRequest } from '../../api';
-import { createUrl } from './utils';
-import { TMarkersItems } from "../types";
+import { createUrl } from '../../api/utils';
+import { TMarkersItems } from '../types/types';
 
 type Props = {
-    createMarkers: (markers: TMarkersItems[]) => Promise<void>;
+    createMarkers: (markers?: TMarkersItems[]) => Promise<void>;
     onReset: () => void;
 };
 
@@ -20,7 +20,7 @@ const Search: FC<Props> = ({ createMarkers, onReset }) => {
         onReset();
         const url = createUrl(searchValue);
         const data = await getRequest(url);
-        await createMarkers(data.result.items);
+        await createMarkers(data?.result?.items);
     };
 
     return (
