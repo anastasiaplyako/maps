@@ -1,14 +1,14 @@
 import React, {useEffect, useState, useRef, FC} from 'react';
-import { load } from '@2gis/mapgl';
+import {load} from '@2gis/mapgl';
 import MapWrapper from './MapWrapper';
 import Search from '../search/Search';
 import Clusters from './Clusters';
-import { INITIAL_COORDINATE, INITIAL_ZOOM, TOKEN } from './const';
-import { Marker } from '@2gis/mapgl/types'
-import { Map as MapType } from '@2gis/mapgl/global'
+import {INITIAL_COORDINATE, INITIAL_ZOOM, TOKEN} from './const';
+import {Marker} from '@2gis/mapgl/types'
+import {Map as MapType} from '@2gis/mapgl/global'
 import {TMarkersItems} from "../types";
 
-const Map:FC = () => {
+const Map: FC = () => {
     const [mapInstance, setMapInstance] = useState<MapType | null>(null);
 
     const [zoom, setZoom] = useState(INITIAL_ZOOM);
@@ -32,7 +32,8 @@ const Map:FC = () => {
     };
 
     const handleReset = () => {
-        mapInstance && mapInstance.off('zoomend', () => {});
+        mapInstance && mapInstance.off('zoomend', () => {
+        });
         markersRef.current = [];
         clusterRef.current = null;
     };
@@ -69,7 +70,7 @@ const Map:FC = () => {
         });
         if (items && mapInstance) {
             const mapglAPI = await load();
-            const coordinates = items.map((item) => ({ coordinates: [item.lon, item.lat] }));
+            const coordinates = items.map((item) => ({coordinates: [item.lon, item.lat]}));
             const clusters = new Clusters(coordinates, mapInstance);
             const calculatedClusters = clusters.calculate();
             markersRef.current = calculatedClusters?.map(
@@ -83,9 +84,9 @@ const Map:FC = () => {
     };
 
     return (
-        <div style={{ width: '100%', height: '100%' }}>
-            <Search onReset={handleReset} createMarkers={createMarkers} />
-            <MapWrapper />
+        <div style={{width: '100%', height: '100%'}}>
+            <Search onReset={handleReset} createMarkers={createMarkers}/>
+            <MapWrapper/>
         </div>
     );
 };

@@ -6,7 +6,7 @@ import * as GeoJSON from "geojson";
 class Clusters {
     markers;
     map;
-    superCluster;
+    superCluster: SuperCluster;
 
     constructor(markers: TMarkerCoordinates, map: Map | null | undefined) {
         this.markers = markers;
