@@ -1,48 +1,37 @@
-import React, { useEffect, useState, useRef, FC } from 'react';
+import React, { useEffect, useState, useRef, FC, useCallback } from 'react';
 import { load } from '@2gis/mapgl';
 import MapWrapper from './MapWrapper';
 import Search from '../search/Search';
-import Clusters from './Clusters';
 import { INITIAL_COORDINATE, INITIAL_ZOOM, TOKEN } from './const';
 import { Marker } from '@2gis/mapgl/types';
 import { Map as MapType } from '@2gis/mapgl/global';
-import { TMarkersItems } from '../types/types';
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import Worker from 'workerize-loader!./worker';
+import { PointFeature } from 'supercluster';
+import { TPoint } from '../types/types';
 
 const Map: FC = () => {
     const [mapInstance, setMapInstance] = useState<MapType | null>(null);
+    const [workerInstance, setWorkerInstance] = useState<Worker>();
 
     const [zoom, setZoom] = useState(INITIAL_ZOOM);
-    const clusterRef = useRef<Clusters | null>(null);
     const markersRef = useRef<Marker[] | undefined>([]);
-
-    const drawMarkers = async () => {
-        if (mapInstance) {
-            const mapglAPI = await load();
-            markersRef.current?.forEach((marker) => {
-                marker.destroy();
-            });
-            const calculatedClusters = clusterRef.current?.calculate();
-            markersRef.current = calculatedClusters?.map(
-                (cluster) =>
-                    new mapglAPI.Marker(mapInstance, {
-                        coordinates: cluster.geometry.coordinates,
-                    }),
-            );
-        }
-    };
 
     const handleReset = () => {
         mapInstance && mapInstance.off('zoomend', () => {});
         markersRef.current = [];
-        clusterRef.current = null;
-    };
+    }
 
     useEffect(() => {
-        drawMarkers().then();
-    }, [zoom]);
+        workerInstance?.postMessage({
+            zoom,
+            bounds: mapInstance?.getBounds(),
+        });
+    }, [zoom, mapInstance]);
 
     useEffect(() => {
         let map: MapType;
+        const worker = new Worker();
 
         load().then((mapglAPI) => {
             map = new mapglAPI.Map('map-container', {
@@ -53,38 +42,45 @@ const Map: FC = () => {
             map.on('zoomend', async () => {
                 setZoom(map.getZoom());
             });
+            worker.onmessage = function (event: MessageEvent) {
+                const clustersFromWorker = event.data.clusters;
+                if (clustersFromWorker.length) {
+                    markersRef.current?.forEach((marker) => {
+                        marker.destroy();
+                    });
+                    markersRef.current = clustersFromWorker?.map(
+                        (cluster: PointFeature<TPoint>) =>
+                            new mapglAPI.Marker(map, {
+                                coordinates: cluster.geometry.coordinates,
+                            }),
+                    );
+                }
+            };
             setMapInstance(map);
+            setWorkerInstance(worker);
         });
 
         return () => {
             handleReset();
             setMapInstance(null);
             map && map.destroy();
+            worker.terminate();
         };
     }, [setMapInstance]);
 
-    const createMarkers = async (items?: TMarkersItems[]) => {
-        markersRef.current?.forEach((marker) => {
-            marker.destroy();
+    const handleSubmit = (searchedValue: string) => {
+        handleReset();
+        workerInstance?.postMessage({
+            searchedValue,
+            maxZoom: mapInstance?.getMaxZoom(),
+            zoom,
+            bounds: mapInstance?.getBounds(),
         });
-        if (items && mapInstance) {
-            const mapglAPI = await load();
-            const coordinates = items.map((item) => ({ coordinates: [item.lon, item.lat] }));
-            const clusters = new Clusters(coordinates, mapInstance);
-            const calculatedClusters = clusters.calculate();
-            markersRef.current = calculatedClusters?.map(
-                (cluster) =>
-                    new mapglAPI.Marker(mapInstance, {
-                        coordinates: cluster.geometry.coordinates,
-                    }),
-            );
-            clusterRef.current = clusters;
-        }
     };
 
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            <Search onReset={handleReset} createMarkers={createMarkers} />
+            <Search onSubmit={handleSubmit} />
             <MapWrapper />
         </div>
     );
